@@ -1,14 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import type { Species } from '@/types/species';
 import type { SemanticZoomLevel } from '@/lib/timelineMath';
-import {
-  fetchWikipediaSummary,
-  getCachedWikipediaSummary,
-  type WikipediaSummary,
-} from '@/lib/wikipedia';
+import { useWikipediaSummary } from '@/lib/useWikipediaSummary';
 import { TaxonSilhouette } from '@/components/TaxonSilhouette';
 
 interface SpeciesCardNodeProps {
@@ -38,32 +35,18 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
   axisY,
   onSelect,
 }: SpeciesCardNodeProps) {
-  const [wiki, setWiki] = useState<WikipediaSummary | null>(() =>
-    getCachedWikipediaSummary(species.wikipediaSlug)
+  const { summary: wiki } = useWikipediaSummary(
+    species.wikipediaSlug,
+    renderMode !== 'pip'
   );
-  const [imgError, setImgError] = useState(false);
-
-  useEffect(() => {
-    if (renderMode === 'pip') return;
-    let active = true;
-    const cached = getCachedWikipediaSummary(species.wikipediaSlug);
-    if (cached) {
-      setWiki(cached);
-      return;
-    }
-    fetchWikipediaSummary(species.wikipediaSlug).then((data) => {
-      if (active) setWiki(data);
-    });
-    return () => {
-      active = false;
-    };
-  }, [species.wikipediaSlug, renderMode]);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   const offsetY = LANE_OFFSETS[lane % LANE_OFFSETS.length];
   const isAbove = offsetY < 0;
   const stemHeight = Math.abs(offsetY) - (renderMode === 'card' ? 38 : renderMode === 'compact' ? 16 : 6);
 
-  const thumbUrl = !imgError ? wiki?.thumbnailUrl : undefined;
+  const rawThumbUrl = wiki?.thumbnailUrl;
+  const thumbUrl = rawThumbUrl && failedUrl !== rawThumbUrl ? rawThumbUrl : undefined;
 
   if (renderMode === 'pip') {
     return (
@@ -128,13 +111,15 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
         >
           <div className="w-6 h-6 rounded-full overflow-hidden bg-slate-800 shrink-0 flex items-center justify-center border border-white/10">
             {thumbUrl ? (
-              <img
+              <Image
                 src={thumbUrl}
                 alt={species.commonName}
+                width={24}
+                height={24}
+                unoptimized
                 loading="lazy"
-                decoding="async"
                 referrerPolicy="no-referrer"
-                onError={() => setImgError(true)}
+                onError={() => setFailedUrl(thumbUrl)}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -201,13 +186,15 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
         <div className="flex items-center gap-2.5 p-2.5">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-950/90 shrink-0 border border-white/10 flex items-center justify-center">
             {thumbUrl ? (
-              <img
+              <Image
                 src={thumbUrl}
                 alt={species.commonName}
+                width={48}
+                height={48}
+                unoptimized
                 loading="lazy"
-                decoding="async"
                 referrerPolicy="no-referrer"
-                onError={() => setImgError(true)}
+                onError={() => setFailedUrl(thumbUrl)}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               />
             ) : (

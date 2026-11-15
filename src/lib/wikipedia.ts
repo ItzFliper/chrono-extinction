@@ -191,12 +191,5 @@ export async function fetchWikipediaSummary(slug: string): Promise<WikipediaSumm
 }
 
 export function getCachedWikipediaSummary(slug: string): WikipediaSummary | null {
-  const mem = MEMORY_CACHE.get(slug);
-  if (mem) return mem;
-  const stored = readStorageCache(slug);
-  if (stored) {
-    MEMORY_CACHE.set(slug, stored);
-    return stored;
-  }
-  return null;
+  return MEMORY_CACHE.get(slug) ?? null;
 }

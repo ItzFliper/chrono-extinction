@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 import { AlertTriangle, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
 import type { Species } from '@/types/species';
-import {
-  fetchWikipediaSummary,
-  getCachedWikipediaSummary,
-  type WikipediaSummary,
-} from '@/lib/wikipedia';
+import { useWikipediaSummary } from '@/lib/useWikipediaSummary';
 import { TaxonSilhouette } from '@/components/TaxonSilhouette';
 
 interface PresentSpeciesCardProps {
@@ -23,27 +20,11 @@ const PresentSpeciesCard = React.memo(function PresentSpeciesCard({
   isSelected,
   onSelect,
 }: PresentSpeciesCardProps) {
-  const [wiki, setWiki] = useState<WikipediaSummary | null>(() =>
-    getCachedWikipediaSummary(species.wikipediaSlug)
-  );
-  const [imgError, setImgError] = useState(false);
+  const { summary: wiki } = useWikipediaSummary(species.wikipediaSlug, true);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    const cached = getCachedWikipediaSummary(species.wikipediaSlug);
-    if (cached) {
-      setWiki(cached);
-      return;
-    }
-    fetchWikipediaSummary(species.wikipediaSlug).then((data) => {
-      if (active) setWiki(data);
-    });
-    return () => {
-      active = false;
-    };
-  }, [species.wikipediaSlug]);
-
-  const thumbUrl = !imgError ? wiki?.thumbnailUrl : undefined;
+  const rawThumbUrl = wiki?.thumbnailUrl;
+  const thumbUrl = rawThumbUrl && failedUrl !== rawThumbUrl ? rawThumbUrl : undefined;
   const isEndangered = variant === 'endangered';
 
   return (
@@ -62,13 +43,15 @@ const PresentSpeciesCard = React.memo(function PresentSpeciesCard({
     >
       <div className="w-11 h-11 rounded-lg overflow-hidden bg-slate-900 shrink-0 border border-white/10 flex items-center justify-center">
         {thumbUrl ? (
-          <img
+          <Image
             src={thumbUrl}
             alt={species.commonName}
+            width={44}
+            height={44}
+            unoptimized
             loading="lazy"
-            decoding="async"
             referrerPolicy="no-referrer"
-            onError={() => setImgError(true)}
+            onError={() => setFailedUrl(thumbUrl)}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (
@@ -205,6 +188,7 @@ export function PresentZone({
           </div>
 
           <div
+            data-present-scroll="true"
             className={`grid gap-3 overflow-y-auto pr-1 max-h-[calc(100vh-210px)] ${
               showEndangered && showRecovered ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
             }`}
