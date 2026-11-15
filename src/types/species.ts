@@ -79,10 +79,28 @@ export interface MassExtinctionEvent {
   isBigFive: boolean;
 }
 
-export interface EraJumpTarget {
+export type EraJumpTarget = {
   id: string;
   label: string;
   sublabel: string;
   targetCenterLog: number;
   targetZoomSpanLog: number;
-}
+};
+
+export type TaxonMacroFilter =
+  | 'all'
+  | 'mammals'
+  | 'birds'
+  | 'reptiles-dinosaurs'
+  | 'marine-fish'
+  | 'amphibians-invertebrates';
+
+export type SortOrder = 'newest-first' | 'oldest-first';
+
+export type StratumId =
+  | 'present'
+  | 'modern-extinctions'
+  | 'ice-age-megafauna'
+  | 'age-of-mammals'
+  | 'age-of-dinosaurs'
+  | 'ancient-oceans';

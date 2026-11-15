@@ -13,18 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ChronoExtinction — Deep-Time Interactive Extinction & Conservation Timeline',
+  title: 'ChronoExtinction — Vertical Geological Strata Museum & Extinction Atlas',
   description:
-    'Explore 450 million years of biodiversity, mass extinctions, historical losses, and modern conservation recoveries on an inverted logarithmic deep-time timeline.',
+    'Journey through 540 million years of Earth strata exploring 1,198 extinct, endangered, and recovered animal species across geological time.',
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
     >
-      <body className="min-h-full bg-[#040711] text-slate-100">{children}</body>
+      <body className="min-h-dvh bg-[#040711] text-slate-100">{children}</body>
     </html>
   );
 }
