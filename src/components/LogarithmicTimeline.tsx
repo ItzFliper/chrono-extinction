@@ -86,7 +86,9 @@ export function LogarithmicTimeline({
   } | null>(null);
 
   const telemetryCallbackRef = useRef(onCameraTelemetry);
-  telemetryCallbackRef.current = onCameraTelemetry;
+  useEffect(() => {
+    telemetryCallbackRef.current = onCameraTelemetry;
+  }, [onCameraTelemetry]);
 
   // Sync external camera jumps (Era dock, search selection, slider)
   useEffect(() => {

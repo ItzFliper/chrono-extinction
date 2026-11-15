@@ -1,69 +1,177 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useCallback, useMemo, useState } from 'react';
+import speciesDataset from '@/data/species.json';
+import type { EraJumpTarget, Species } from '@/types/species';
+import {
+  DEFAULT_CENTER_LOG,
+  DEFAULT_ZOOM_SPAN_LOG,
+  getYearsAgo,
+  yearsAgoToLog,
+} from '@/lib/timelineMath';
+import { ControlBar, type StatusFilter } from '@/components/ControlBar';
+import {
+  LogarithmicTimeline,
+  type CameraTarget,
+} from '@/components/LogarithmicTimeline';
+import { EraDock } from '@/components/EraDock';
+import { SpeciesDrawer } from '@/components/SpeciesDrawer';
+
+const ALL_SPECIES = speciesDataset as Species[];
+
+export default function HomePage() {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null);
+  const [highlightedSpeciesId, setHighlightedSpeciesId] = useState<string | null>(null);
+
+  const [cameraTarget, setCameraTarget] = useState<CameraTarget>({
+    centerLog: DEFAULT_CENTER_LOG,
+    zoomSpanLog: DEFAULT_ZOOM_SPAN_LOG,
+    version: 0,
+  });
+
+  // Live telemetry reported from the timeline's 60fps animation loop
+  const [telemetry, setTelemetry] = useState({
+    centerLog: DEFAULT_CENTER_LOG,
+    zoomSpanLog: DEFAULT_ZOOM_SPAN_LOG,
+  });
+
+  const filteredSpecies = useMemo(() => {
+    if (statusFilter === 'all') return ALL_SPECIES;
+    return ALL_SPECIES.filter((s) => s.status === statusFilter);
+  }, [statusFilter]);
+
+  const jumpToCamera = useCallback((centerLog: number, zoomSpanLog: number) => {
+    setCameraTarget((prev) => ({
+      centerLog,
+      zoomSpanLog,
+      version: prev.version + 1,
+    }));
+  }, []);
+
+  const handleFocusPresent = useCallback(() => {
+    jumpToCamera(-0.35, 1.6);
+  }, [jumpToCamera]);
+
+  const handleStatusFilterChange = useCallback(
+    (nextFilter: StatusFilter) => {
+      setStatusFilter(nextFilter);
+      if (nextFilter === 'endangered' || nextFilter === 'recovered') {
+        jumpToCamera(-0.35, 1.6);
+      } else if (nextFilter === 'extinct' && telemetry.centerLog < 0.2) {
+        jumpToCamera(4.6, 8.8);
+      }
+    },
+    [jumpToCamera, telemetry.centerLog]
+  );
+
+  const handleFocusSpecies = useCallback(
+    (sp: Species) => {
+      setHighlightedSpeciesId(sp.id);
+      if (sp.status === 'endangered' || sp.status === 'recovered') {
+        jumpToCamera(-0.35, 1.6);
+        return;
+      }
+      const yearsAgo = getYearsAgo(sp.extinctionYear, sp.status);
+      const logVal = yearsAgoToLog(yearsAgo);
+      const targetSpan = yearsAgo > 1_000_000 ? 0.65 : yearsAgo > 5_000 ? 0.9 : 0.75;
+      jumpToCamera(logVal, targetSpan);
+    },
+    [jumpToCamera]
+  );
+
+  const handleSelectSearchSpecies = useCallback(
+    (sp: Species) => {
+      // Ensure filter allows seeing the selected species
+      if (statusFilter !== 'all' && statusFilter !== sp.status) {
+        setStatusFilter('all');
+      }
+      handleFocusSpecies(sp);
+      setSelectedSpecies(sp);
+    },
+    [statusFilter, handleFocusSpecies]
+  );
+
+  const handleJumpToYearsAgo = useCallback(
+    (yearsAgo: number) => {
+      if (yearsAgo <= 1) {
+        handleFocusPresent();
+        return;
+      }
+      const logVal = yearsAgoToLog(yearsAgo);
+      jumpToCamera(logVal, 0.95);
+    },
+    [handleFocusPresent, jumpToCamera]
+  );
+
+  const handleJumpToEra = useCallback(
+    (target: EraJumpTarget) => {
+      if (target.id !== 'present' && (statusFilter === 'endangered' || statusFilter === 'recovered')) {
+        setStatusFilter('all');
+      }
+      jumpToCamera(target.targetCenterLog, target.targetZoomSpanLog);
+    },
+    [jumpToCamera, statusFilter]
+  );
+
+  const handleZoomChange = useCallback(
+    (nextZoomSpanLog: number) => {
+      jumpToCamera(telemetry.centerLog, nextZoomSpanLog);
+    },
+    [jumpToCamera, telemetry.centerLog]
+  );
+
+  const handleResetView = useCallback(() => {
+    setStatusFilter('all');
+    setHighlightedSpeciesId(null);
+    jumpToCamera(DEFAULT_CENTER_LOG, DEFAULT_ZOOM_SPAN_LOG);
+  }, [jumpToCamera]);
+
+  const handleCameraTelemetry = useCallback((centerLog: number, zoomSpanLog: number) => {
+    setTelemetry({ centerLog, zoomSpanLog });
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="relative h-dvh w-screen overflow-hidden bg-[#040711]">
+      <ControlBar
+        allSpecies={ALL_SPECIES}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
+        onSelectSearchSpecies={handleSelectSearchSpecies}
+        onJumpToYearsAgo={handleJumpToYearsAgo}
+        onResetView={handleResetView}
+      />
+
+      <LogarithmicTimeline
+        species={filteredSpecies}
+        allSpecies={ALL_SPECIES}
+        statusFilter={statusFilter}
+        cameraTarget={cameraTarget}
+        selectedSpeciesId={selectedSpecies?.id ?? null}
+        highlightedSpeciesId={highlightedSpeciesId}
+        onSelectSpecies={setSelectedSpecies}
+        onCameraTelemetry={handleCameraTelemetry}
+        onFocusPresent={handleFocusPresent}
+        onJumpToCoordinates={jumpToCamera}
+      />
+
+      <EraDock
+        centerLog={telemetry.centerLog}
+        zoomSpanLog={telemetry.zoomSpanLog}
+        onJumpToEra={handleJumpToEra}
+        onZoomChange={handleZoomChange}
+      />
+
+      <SpeciesDrawer
+        species={selectedSpecies}
+        allSpecies={ALL_SPECIES}
+        onClose={() => setSelectedSpecies(null)}
+        onSelectSpecies={setSelectedSpecies}
+        onFocusSpeciesOnTimeline={(sp) => {
+          handleFocusSpecies(sp);
+          setSelectedSpecies(null);
+        }}
+      />
+    </main>
   );
 }
