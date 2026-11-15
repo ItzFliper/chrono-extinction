@@ -104,7 +104,7 @@ export function getWikipediaFallbackUrl(slug: string): string {
 
 async function fetchWithRetry(endpoint: string): Promise<Response> {
   let attempt = 0;
-  while (attempt < 3) {
+  while (attempt < 2) {
     const response = await fetch(endpoint, {
       headers: {
         Accept: 'application/json',
@@ -114,13 +114,55 @@ async function fetchWithRetry(endpoint: string): Promise<Response> {
       return response;
     }
     attempt++;
-    await new Promise((r) => setTimeout(r, 600 * attempt));
+    await new Promise((r) => setTimeout(r, 450 * attempt));
   }
   return fetch(endpoint, {
     headers: {
       Accept: 'application/json',
     },
   });
+}
+
+async function fetchViaMediaWikiAction(slug: string, fallbackUrl: string): Promise<WikipediaSummary | null> {
+  try {
+    const actionUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro=1&explaintext=1&redirects=1&pithumbsize=600&format=json&origin=*&titles=${encodeURIComponent(
+      slug
+    )}`;
+    const res = await fetch(actionUrl, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) return null;
+
+    const payload = (await res.json()) as {
+      query?: {
+        pages?: Record<
+          string,
+          {
+            title?: string;
+            missing?: string;
+            extract?: string;
+            thumbnail?: { source?: string };
+          }
+        >;
+      };
+    };
+
+    const page = Object.values(payload.query?.pages ?? {})[0];
+    if (!page || typeof page.missing === 'string') return null;
+
+    const canonicalSlug = (page.title || slug).replace(/ /g, '_');
+    return {
+      slug,
+      title: page.title || slug.replace(/_/g, ' '),
+      extract: page.extract || '',
+      thumbnailUrl: page.thumbnail?.source,
+      originalImageUrl: page.thumbnail?.source,
+      pageUrl: getWikipediaFallbackUrl(canonicalSlug) || fallbackUrl,
+      status: 'ok',
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchWikipediaSummary(slug: string): Promise<WikipediaSummary> {
@@ -144,42 +186,56 @@ export async function fetchWikipediaSummary(slug: string): Promise<WikipediaSumm
     try {
       const response = await fetchWithRetry(endpoint);
 
-      if (!response.ok) {
-        throw new Error(`Wikipedia API responded with ${response.status}`);
+      if (response.ok) {
+        const data = (await response.json()) as {
+          title?: string;
+          description?: string;
+          extract?: string;
+          thumbnail?: { source?: string };
+          originalimage?: { source?: string };
+          content_urls?: { desktop?: { page?: string } };
+        };
+
+        const result: WikipediaSummary = {
+          slug,
+          title: data.title || slug.replace(/_/g, ' '),
+          description: data.description,
+          extract: data.extract || '',
+          thumbnailUrl: data.thumbnail?.source,
+          originalImageUrl: data.originalimage?.source || data.thumbnail?.source,
+          pageUrl: data.content_urls?.desktop?.page || fallbackUrl,
+          status: 'ok',
+        };
+
+        MEMORY_CACHE.set(slug, result);
+        writeStorageCache(slug, result);
+        return result;
       }
 
-      const data = (await response.json()) as {
-        title?: string;
-        description?: string;
-        extract?: string;
-        thumbnail?: { source?: string };
-        originalimage?: { source?: string };
-        content_urls?: { desktop?: { page?: string } };
-      };
+      // Fallback to MediaWiki Action API if REST summary endpoint returned 404/429/5xx
+      const actionFallback = await fetchViaMediaWikiAction(slug, fallbackUrl);
+      if (actionFallback) {
+        MEMORY_CACHE.set(slug, actionFallback);
+        writeStorageCache(slug, actionFallback);
+        return actionFallback;
+      }
 
-      const result: WikipediaSummary = {
-        slug,
-        title: data.title || slug.replace(/_/g, ' '),
-        description: data.description,
-        extract: data.extract || '',
-        thumbnailUrl: data.thumbnail?.source,
-        originalImageUrl: data.originalimage?.source || data.thumbnail?.source,
-        pageUrl: data.content_urls?.desktop?.page || fallbackUrl,
-        status: 'ok',
-      };
-
-      MEMORY_CACHE.set(slug, result);
-      writeStorageCache(slug, result);
-      return result;
+      throw new Error(`Wikipedia API responded with ${response.status}`);
     } catch {
-      const fallback: WikipediaSummary = {
+      const actionFallback = await fetchViaMediaWikiAction(slug, fallbackUrl);
+      if (actionFallback) {
+        MEMORY_CACHE.set(slug, actionFallback);
+        writeStorageCache(slug, actionFallback);
+        return actionFallback;
+      }
+
+      return {
         slug,
         title: slug.replace(/_/g, ' '),
         extract: '',
         pageUrl: fallbackUrl,
         status: 'fallback',
       };
-      return fallback;
     } finally {
       releaseSlot();
       INFLIGHT_CACHE.delete(slug);
