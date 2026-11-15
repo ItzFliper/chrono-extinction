@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import speciesDataset from '@/data/species.json';
 import type { EraJumpTarget, Species } from '@/types/species';
 import {
@@ -14,7 +14,7 @@ import {
   LogarithmicTimeline,
   type CameraTarget,
 } from '@/components/LogarithmicTimeline';
-import { EraDock } from '@/components/EraDock';
+import { EraDock, type EraDockHandle } from '@/components/EraDock';
 import { SpeciesDrawer } from '@/components/SpeciesDrawer';
 
 const ALL_SPECIES = speciesDataset as Species[];
@@ -30,11 +30,17 @@ export default function HomePage() {
     version: 0,
   });
 
-  // Live telemetry reported from the timeline's 60fps animation loop
-  const [telemetry, setTelemetry] = useState({
+  // Settled camera state (only synced when camera comes to rest; zero per-frame React re-renders)
+  const [settledCam, setSettledCam] = useState({
     centerLog: DEFAULT_CENTER_LOG,
     zoomSpanLog: DEFAULT_ZOOM_SPAN_LOG,
   });
+
+  const liveCamRef = useRef({
+    centerLog: DEFAULT_CENTER_LOG,
+    zoomSpanLog: DEFAULT_ZOOM_SPAN_LOG,
+  });
+  const eraDockRef = useRef<EraDockHandle | null>(null);
 
   const filteredSpecies = useMemo(() => {
     if (statusFilter === 'all') return ALL_SPECIES;
@@ -58,11 +64,11 @@ export default function HomePage() {
       setStatusFilter(nextFilter);
       if (nextFilter === 'endangered' || nextFilter === 'recovered') {
         jumpToCamera(-0.35, 1.6);
-      } else if (nextFilter === 'extinct' && telemetry.centerLog < 0.2) {
+      } else if (nextFilter === 'extinct' && liveCamRef.current.centerLog < 0.2) {
         jumpToCamera(4.6, 8.8);
       }
     },
-    [jumpToCamera, telemetry.centerLog]
+    [jumpToCamera]
   );
 
   const handleFocusSpecies = useCallback(
@@ -82,7 +88,6 @@ export default function HomePage() {
 
   const handleSelectSearchSpecies = useCallback(
     (sp: Species) => {
-      // Ensure filter allows seeing the selected species
       if (statusFilter !== 'all' && statusFilter !== sp.status) {
         setStatusFilter('all');
       }
@@ -116,9 +121,9 @@ export default function HomePage() {
 
   const handleZoomChange = useCallback(
     (nextZoomSpanLog: number) => {
-      jumpToCamera(telemetry.centerLog, nextZoomSpanLog);
+      jumpToCamera(liveCamRef.current.centerLog, nextZoomSpanLog);
     },
-    [jumpToCamera, telemetry.centerLog]
+    [jumpToCamera]
   );
 
   const handleResetView = useCallback(() => {
@@ -127,8 +132,14 @@ export default function HomePage() {
     jumpToCamera(DEFAULT_CENTER_LOG, DEFAULT_ZOOM_SPAN_LOG);
   }, [jumpToCamera]);
 
-  const handleCameraTelemetry = useCallback((centerLog: number, zoomSpanLog: number) => {
-    setTelemetry({ centerLog, zoomSpanLog });
+  const handleCameraFrame = useCallback((centerLog: number, zoomSpanLog: number) => {
+    liveCamRef.current = { centerLog, zoomSpanLog };
+    eraDockRef.current?.syncFrameTelemetry(centerLog, zoomSpanLog);
+  }, []);
+
+  const handleCameraSettle = useCallback((centerLog: number, zoomSpanLog: number) => {
+    liveCamRef.current = { centerLog, zoomSpanLog };
+    setSettledCam({ centerLog, zoomSpanLog });
   }, []);
 
   return (
@@ -150,14 +161,16 @@ export default function HomePage() {
         selectedSpeciesId={selectedSpecies?.id ?? null}
         highlightedSpeciesId={highlightedSpeciesId}
         onSelectSpecies={setSelectedSpecies}
-        onCameraTelemetry={handleCameraTelemetry}
+        onCameraFrame={handleCameraFrame}
+        onCameraSettle={handleCameraSettle}
         onFocusPresent={handleFocusPresent}
         onJumpToCoordinates={jumpToCamera}
       />
 
       <EraDock
-        centerLog={telemetry.centerLog}
-        zoomSpanLog={telemetry.zoomSpanLog}
+        ref={eraDockRef}
+        centerLog={settledCam.centerLog}
+        zoomSpanLog={settledCam.zoomSpanLog}
         onJumpToEra={handleJumpToEra}
         onZoomChange={handleZoomChange}
       />

@@ -90,7 +90,7 @@ export function SpeciesDrawer({
     );
   };
 
-  const rawHeroUrl = wiki?.originalImageUrl || wiki?.thumbnailUrl;
+  const rawHeroUrl = wiki?.originalImageUrl || wiki?.thumbnailUrl || species?.thumbnailUrl;
   const heroImageUrl = rawHeroUrl && failedUrl !== rawHeroUrl ? rawHeroUrl : undefined;
 
   const logCoord = species
