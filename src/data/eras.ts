@@ -7,7 +7,7 @@ export const GEOLOGICAL_ERAS: GeologicalEra[] = [
     shortName: 'Ordovician',
     startYearsAgo: 485_400_000,
     endYearsAgo: 419_200_000,
-    color: 'rgba(14, 165, 233, 0.10)',
+    color: 'rgba(14, 165, 233, 0.1)',
     accentHex: '#38bdf8',
     description:
       'Marine biodiversity explosion followed by the End-Ordovician glaciation.',
@@ -18,7 +18,7 @@ export const GEOLOGICAL_ERAS: GeologicalEra[] = [
     shortName: 'Devonian',
     startYearsAgo: 419_200_000,
     endYearsAgo: 358_900_000,
-    color: 'rgba(6, 182, 212, 0.10)',
+    color: 'rgba(6, 182, 212, 0.1)',
     accentHex: '#22d3ee',
     description:
       'Jawed placoderms rule the seas while the first tetrapods step onto land.',
@@ -29,7 +29,7 @@ export const GEOLOGICAL_ERAS: GeologicalEra[] = [
     shortName: 'Permian',
     startYearsAgo: 358_900_000,
     endYearsAgo: 251_900_000,
-    color: 'rgba(249, 115, 22, 0.10)',
+    color: 'rgba(249, 115, 22, 0.1)',
     accentHex: '#fb923c',
     description:
       'Synapsids dominate Pangaea until Siberian Traps volcanism triggers The Great Dying.',
@@ -40,7 +40,7 @@ export const GEOLOGICAL_ERAS: GeologicalEra[] = [
     shortName: 'Triassic',
     startYearsAgo: 251_900_000,
     endYearsAgo: 201_300_000,
-    color: 'rgba(234, 88, 12, 0.10)',
+    color: 'rgba(234, 88, 12, 0.1)',
     accentHex: '#f97316',
     description:
       'Biosphere recovery from the Permian catastrophe and the dawn of early dinosaurs.',
@@ -51,7 +51,7 @@ export const GEOLOGICAL_ERAS: GeologicalEra[] = [
     shortName: 'Jurassic',
     startYearsAgo: 201_300_000,
     endYearsAgo: 145_000_000,
-    color: 'rgba(34, 197, 94, 0.10)',
+    color: 'rgba(34, 197, 94, 0.1)',
     accentHex: '#4ade80',
     description:
       'Giant sauropods, armored stegosaurs, marine reptiles, and early avians flourish.',
@@ -62,7 +62,7 @@ export const GEOLOGICAL_ERAS: GeologicalEra[] = [
     shortName: 'Cretaceous',
     startYearsAgo: 145_000_000,
     endYearsAgo: 66_000_000,
-    color: 'rgba(132, 204, 22, 0.10)',
+    color: 'rgba(132, 204, 22, 0.1)',
     accentHex: '#a3e635',
     description:
       'Apex theropods and horned dinosaurs thrive until the Chicxulub asteroid impact.',
@@ -95,7 +95,7 @@ export const GEOLOGICAL_ERAS: GeologicalEra[] = [
     shortName: 'Historical',
     startYearsAgo: 11_700,
     endYearsAgo: 1,
-    color: 'rgba(244, 63, 94, 0.10)',
+    color: 'rgba(244, 63, 94, 0.1)',
     accentHex: '#fb7185',
     description:
       'Island endemics and continental herds face rapid human hunting and habitat transformation.',

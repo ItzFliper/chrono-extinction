@@ -20,9 +20,9 @@ interface SpeciesCardNodeProps {
   onSelect: (species: Species) => void;
 }
 
-// Alternate lanes above and below the central axis:
-// even lanes (0, 2, 4) sit above axis; odd lanes (1, 3, 5) sit below axis.
-const LANE_OFFSETS = [-122, 114, -222, 212, -318, 304];
+// Alternate lanes above and below the central axis with clear vertical clearance:
+// Lanes 0..3 hold full cards (92px height), lanes 4..5 hold outer compact pills (40px height).
+const LANE_OFFSETS = [-86, 86, -196, 196, -274, 274];
 
 export const SpeciesCardNode = React.memo(function SpeciesCardNode({
   species,
@@ -43,17 +43,21 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
 
   const offsetY = LANE_OFFSETS[lane % LANE_OFFSETS.length];
   const isAbove = offsetY < 0;
-  const stemHeight = Math.abs(offsetY) - (renderMode === 'card' ? 38 : renderMode === 'compact' ? 16 : 6);
+  const stemHeight =
+    Math.abs(offsetY) -
+    (renderMode === 'card' ? (semanticZoom === 'micro' ? 46 : 34) : renderMode === 'compact' ? 18 : 6);
 
   const rawThumbUrl = wiki?.thumbnailUrl;
   const thumbUrl = rawThumbUrl && failedUrl !== rawThumbUrl ? rawThumbUrl : undefined;
+  const px = Math.round(screenX);
+  const py = Math.round(axisY);
 
   if (renderMode === 'pip') {
     return (
       <div
         className="absolute top-0 left-0 pointer-events-auto"
         style={{
-          transform: `translate3d(${screenX}px, ${axisY}px, 0)`,
+          transform: `translate3d(${px}px, ${py}px, 0px)`,
         }}
       >
         <button
@@ -74,10 +78,11 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
   if (renderMode === 'compact') {
     return (
       <div
-        className="absolute top-0 left-0 pointer-events-none"
+        className={`absolute top-0 left-0 pointer-events-none ${
+          isSelected || isHighlighted ? 'z-40' : 'z-[12]'
+        }`}
         style={{
-          transform: `translate3d(${screenX}px, ${axisY}px, 0)`,
-          zIndex: isSelected || isHighlighted ? 40 : 12,
+          transform: `translate3d(${px}px, ${py}px, 0px)`,
         }}
       >
         {/* Axis dot */}
@@ -96,8 +101,8 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
         />
         <motion.button
           type="button"
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
           onClick={() => onSelect(species)}
           style={{
@@ -106,7 +111,7 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
           className={`pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 rounded-full px-2.5 py-1.5 backdrop-blur-md border text-left transition-all duration-150 hover:scale-105 cursor-pointer ${
             isSelected || isHighlighted
               ? 'bg-amber-950/85 border-amber-400/80 text-amber-100 shadow-[0_0_24px_rgba(251,191,36,0.3)]'
-              : 'bg-slate-900/80 border-white/15 text-slate-100 hover:border-sky-400/50 hover:bg-slate-800/90'
+              : 'bg-slate-900/85 border-white/15 text-slate-100 hover:border-sky-400/50 hover:bg-slate-800/90'
           }`}
         >
           <div className="w-6 h-6 rounded-full overflow-hidden bg-slate-800 shrink-0 flex items-center justify-center border border-white/10">
@@ -141,10 +146,11 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
 
   return (
     <div
-      className="absolute top-0 left-0 pointer-events-none"
+      className={`absolute top-0 left-0 pointer-events-none ${
+        isSelected || isHighlighted ? 'z-[45]' : 'z-20'
+      }`}
       style={{
-        transform: `translate3d(${screenX}px, ${axisY}px, 0)`,
-        zIndex: isSelected || isHighlighted ? 45 : 20,
+        transform: `translate3d(${px}px, ${py}px, 0px)`,
       }}
     >
       {/* Axis anchor marker */}
@@ -170,27 +176,27 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
       {/* Full Specimen Card */}
       <motion.button
         type="button"
-        initial={{ opacity: 0, y: isAbove ? -8 : 8, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.22 }}
         onClick={() => onSelect(species)}
         style={{
           top: `${offsetY}px`,
         }}
-        className={`pointer-events-auto group absolute -translate-x-1/2 -translate-y-1/2 w-[188px] rounded-xl overflow-hidden border backdrop-blur-xl text-left transition-all duration-150 cursor-pointer hover:-translate-y-[calc(50%+3px)] ${
+        className={`pointer-events-auto group absolute -translate-x-1/2 -translate-y-1/2 w-[188px] rounded-xl overflow-hidden border backdrop-blur-xl text-left transition-all duration-150 cursor-pointer hover:scale-[1.03] ${
           isSelected || isHighlighted
             ? 'bg-slate-900/95 border-amber-400 shadow-[0_0_28px_rgba(251,191,36,0.32)] ring-1 ring-amber-300/60'
-            : 'bg-slate-900/82 border-white/15 hover:border-sky-400/60 shadow-[0_12px_32px_rgba(2,6,23,0.65)]'
+            : 'bg-slate-900/88 border-white/15 hover:border-sky-400/60 shadow-[0_12px_32px_rgba(2,6,23,0.65)]'
         }`}
       >
-        <div className="flex items-center gap-2.5 p-2.5">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-950/90 shrink-0 border border-white/10 flex items-center justify-center">
+        <div className="flex items-center gap-2 p-2">
+          <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-slate-950/90 shrink-0 border border-white/10 flex items-center justify-center">
             {thumbUrl ? (
               <Image
                 src={thumbUrl}
                 alt={species.commonName}
-                width={48}
-                height={48}
+                width={40}
+                height={40}
                 unoptimized
                 loading="lazy"
                 referrerPolicy="no-referrer"
@@ -198,7 +204,7 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               />
             ) : (
-              <TaxonSilhouette group={species.taxonGroup} className="w-7 h-7 text-sky-300/65" />
+              <TaxonSilhouette group={species.taxonGroup} className="w-6 h-6 text-sky-300/65" />
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -216,8 +222,8 @@ export const SpeciesCardNode = React.memo(function SpeciesCardNode({
           </div>
         </div>
         {semanticZoom === 'micro' && (
-          <div className="px-2.5 pb-2 pt-0 border-t border-white/5">
-            <p className="mt-1.5 text-[10px] text-slate-300/85 line-clamp-2 leading-relaxed">
+          <div className="px-2 pb-1.5 pt-1 border-t border-white/5">
+            <p className="text-[10px] text-slate-300/85 line-clamp-2 leading-tight">
               {species.cause}
             </p>
           </div>

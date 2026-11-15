@@ -174,7 +174,7 @@ export function PresentZone({
           </button>
         </div>
       ) : (
-        <div className="pointer-events-auto h-full flex flex-col justify-center px-5 pt-20 pb-24 max-w-[920px]">
+        <div className="pointer-events-auto h-full flex flex-col justify-center pl-7 pr-5 pt-20 pb-24 max-w-[920px]">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-sky-300">

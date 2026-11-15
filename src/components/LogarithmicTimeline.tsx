@@ -385,8 +385,8 @@ export function LogarithmicTimeline({
           <div
             key={era.id}
             style={{
-              transform: `translate3d(${leftX}px, 0, 0)`,
-              width: `${Math.max(1, width)}px`,
+              transform: `translate3d(${Math.round(leftX)}px, 0px, 0px)`,
+              width: `${Math.max(1, Math.round(width))}px`,
               background: `linear-gradient(180deg, ${era.color} 0%, rgba(4,7,17,0.02) 55%, ${era.color} 100%)`,
             }}
             className="absolute top-0 bottom-0 left-0 border-l border-white/10"
@@ -421,7 +421,7 @@ export function LogarithmicTimeline({
         {visibleTicks.map((tick) => (
           <div
             key={tick.id}
-            style={{ transform: `translate3d(${tick.screenX}px, ${axisY}px, 0)` }}
+            style={{ transform: `translate3d(${Math.round(tick.screenX)}px, ${axisY}px, 0px)` }}
             className="absolute top-0 left-0"
           >
             <div
@@ -430,7 +430,9 @@ export function LogarithmicTimeline({
               }`}
             />
             <span
-              className={`block -translate-x-1/2 mt-2 font-mono whitespace-nowrap ${
+              className={`block mt-2 font-mono whitespace-nowrap ${
+                tick.id === 'Present' ? '-translate-x-[calc(100%+6px)]' : '-translate-x-1/2'
+              } ${
                 tick.major ? 'text-[11px] font-semibold text-slate-200/90' : 'text-[10px] text-slate-400/80'
               }`}
             >
@@ -447,7 +449,7 @@ export function LogarithmicTimeline({
           return (
             <div
               key={ev.id}
-              style={{ transform: `translate3d(${screenX}px, 0, 0)` }}
+              style={{ transform: `translate3d(${Math.round(screenX)}px, 0px, 0px)` }}
               className="absolute top-0 bottom-0 left-0"
             >
               {/* Vertical crimson shockline */}
@@ -468,7 +470,7 @@ export function LogarithmicTimeline({
                 onClick={() => onJumpToCoordinates(logVal, 1.4)}
                 aria-label={`${ev.name} (${ev.displayDate})`}
                 style={{ top: `${axisY - 46}px` }}
-                className={`pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-mono font-semibold border backdrop-blur-md transition-all cursor-pointer ${
+                className={`pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-mono font-semibold border backdrop-blur-md transition-all cursor-pointer ${
                   ev.isBigFive
                     ? 'bg-rose-950/85 border-rose-400/50 text-rose-200 hover:bg-rose-900 hover:border-rose-300 shadow-[0_0_16px_rgba(244,63,94,0.28)]'
                     : 'bg-amber-950/85 border-amber-400/45 text-amber-200 hover:bg-amber-900'
@@ -533,7 +535,7 @@ export function LogarithmicTimeline({
       {cursorX !== null && !isDragging && (
         <div
           aria-hidden="true"
-          style={{ transform: `translate3d(${cursorX}px, 0, 0)` }}
+          style={{ transform: `translate3d(${Math.round(cursorX)}px, 0px, 0px)` }}
           className="pointer-events-none absolute top-0 bottom-0 left-0 z-10"
         >
           <div className="w-px h-full bg-white/10" />
