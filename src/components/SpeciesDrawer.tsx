@@ -348,7 +348,7 @@ export function SpeciesDrawer({
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/15 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors cursor-pointer"
             >
               <Crosshair className="w-3.5 h-3.5 text-sky-400" />
-              <span>Focus on Timeline</span>
+              <span>Jump to Stratum</span>
             </button>
             <a
               href={wiki?.pageUrl || getWikipediaFallbackUrl(species.wikipediaSlug)}

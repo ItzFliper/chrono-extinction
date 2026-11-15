@@ -1,4 +1,11 @@
-import type { GeologicalEra, MassExtinctionEvent } from '@/types/species';
+import type {
+  EraId,
+  GeologicalEra,
+  MassExtinctionEvent,
+  Species,
+  StratumId,
+  TaxonMacroFilter,
+} from '@/types/species';
 
 export const GEOLOGICAL_ERAS: GeologicalEra[] = [
   {
@@ -181,3 +188,175 @@ export const MASS_EXTINCTION_EVENTS: MassExtinctionEvent[] = [
     isBigFive: false,
   },
 ];
+
+export interface AtlasStratum {
+  id: StratumId;
+  title: string;
+  shortTitle: string;
+  subtitle: string;
+  timespan: string;
+  depthLabel: string;
+  eraIds: EraId[];
+  accentHex: string;
+  badgeClass: string;
+  bannerGradient: string;
+  borderClass: string;
+  description: string;
+  extinctionCallouts: MassExtinctionEvent[];
+}
+
+export const ATLAS_STRATA: AtlasStratum[] = [
+  {
+    id: 'present',
+    title: 'The Present · Anthropocene Crossroads',
+    shortTitle: 'Present',
+    subtitle: 'Active Crisis & Conservation Recoveries',
+    timespan: '2026 CE · Surface Layer',
+    depthLabel: '0 m · 2026 CE',
+    eraIds: ['present'],
+    accentHex: '#34d399',
+    badgeClass: 'bg-emerald-500/15 border-emerald-400/40 text-emerald-200',
+    bannerGradient: 'from-amber-950/35 via-slate-900/90 to-emerald-950/35',
+    borderClass: 'border-emerald-500/30',
+    description:
+      'A decisive planetary crossroads: species fighting for survival on the brink alongside landmark conservation recoveries brought back from extinction.',
+    extinctionCallouts: [],
+  },
+  {
+    id: 'modern-extinctions',
+    title: 'Modern & Historical Extinctions',
+    shortTitle: 'Modern (1500+)',
+    subtitle: 'Holocene & Anthropocene Losses',
+    timespan: '10,000 BCE – Present (1500 CE – 2025 CE Pulse)',
+    depthLabel: '120 m · 1500 CE–Now',
+    eraIds: ['holocene-historical'],
+    accentHex: '#fb7185',
+    badgeClass: 'bg-rose-500/15 border-rose-400/40 text-rose-200',
+    bannerGradient: 'from-rose-950/40 via-slate-900/90 to-slate-950/90',
+    borderClass: 'border-rose-500/30',
+    description:
+      'Island endemics, flightless birds, and continental apex predators lost to rapid human expansion, overhunting, invasive species, and habitat transformation.',
+    extinctionCallouts: [],
+  },
+  {
+    id: 'ice-age-megafauna',
+    title: 'Ice Age & Megafauna',
+    shortTitle: 'Pleistocene',
+    subtitle: 'Quaternary Glacial Cycles',
+    timespan: '2.58 Ma – 11,700 Years Ago',
+    depthLabel: '450 m · 2.58 Ma',
+    eraIds: ['pleistocene'],
+    accentHex: '#818cf8',
+    badgeClass: 'bg-indigo-500/15 border-indigo-400/40 text-indigo-200',
+    bannerGradient: 'from-indigo-950/45 via-slate-900/90 to-sky-950/30',
+    borderClass: 'border-indigo-500/30',
+    description:
+      'Towering mammoths, saber-toothed cats, giant ground sloths, and armored glyptodonts that roamed glacial steppes before abrupt deglaciation and human dispersal.',
+    extinctionCallouts: MASS_EXTINCTION_EVENTS.filter((ev) => ev.id === 'quaternary-megafauna'),
+  },
+  {
+    id: 'age-of-mammals',
+    title: 'Age of Mammals (Cenozoic)',
+    shortTitle: 'Cenozoic',
+    subtitle: 'Paleogene & Neogene Radiations',
+    timespan: '66 Ma – 2.58 Ma',
+    depthLabel: '1,200 m · 66 Ma',
+    eraIds: ['paleogene-neogene'],
+    accentHex: '#facc15',
+    badgeClass: 'bg-amber-500/15 border-amber-400/40 text-amber-200',
+    bannerGradient: 'from-amber-950/40 via-slate-900/90 to-yellow-950/25',
+    borderClass: 'border-amber-500/30',
+    description:
+      'Following the Chicxulub impact, mammals, terror birds, giant crocodiles, and apex sharks radiated rapidly across tropical forests, grasslands, and evolving oceans.',
+    extinctionCallouts: [],
+  },
+  {
+    id: 'age-of-dinosaurs',
+    title: 'Age of Dinosaurs (Mesozoic)',
+    shortTitle: 'Mesozoic',
+    subtitle: 'Cretaceous · Jurassic · Triassic',
+    timespan: '252 Ma – 66 Ma',
+    depthLabel: '2,600 m · 252 Ma',
+    eraIds: ['cretaceous', 'jurassic', 'triassic'],
+    accentHex: '#a3e635',
+    badgeClass: 'bg-lime-500/15 border-lime-400/40 text-lime-200',
+    bannerGradient: 'from-emerald-950/35 via-slate-900/90 to-lime-950/30',
+    borderClass: 'border-lime-500/30',
+    description:
+      '186 million years of archosaur dominance: colossal sauropods, apex theropods, horned ceratopsians, pterosaurs, mosasaurs, plesiosaurs, and the first birds.',
+    extinctionCallouts: MASS_EXTINCTION_EVENTS.filter(
+      (ev) => ev.id === 'end-cretaceous' || ev.id === 'end-triassic'
+    ),
+  },
+  {
+    id: 'ancient-oceans',
+    title: 'Ancient Oceans & Monsters (Paleozoic)',
+    shortTitle: 'Paleozoic',
+    subtitle: 'Permian · Devonian · Ordovician · Cambrian',
+    timespan: '540 Ma – 252 Ma',
+    depthLabel: '4,200 m · 540 Ma',
+    eraIds: ['permian', 'devonian', 'ordovician'],
+    accentHex: '#38bdf8',
+    badgeClass: 'bg-sky-500/15 border-sky-400/40 text-sky-200',
+    bannerGradient: 'from-sky-950/45 via-slate-900/90 to-cyan-950/35',
+    borderClass: 'border-sky-500/30',
+    description:
+      "From the Cambrian explosion's radiodonts and trilobites to giant Devonian armored placoderms, Carboniferous coal-swamp arthropods, and Permian synapsids.",
+    extinctionCallouts: MASS_EXTINCTION_EVENTS.filter(
+      (ev) =>
+        ev.id === 'end-permian' || ev.id === 'late-devonian' || ev.id === 'end-ordovician'
+    ),
+  },
+];
+
+const ERA_TO_STRATUM_MAP: Record<EraId, StratumId> = {
+  present: 'present',
+  'holocene-historical': 'modern-extinctions',
+  pleistocene: 'ice-age-megafauna',
+  'paleogene-neogene': 'age-of-mammals',
+  cretaceous: 'age-of-dinosaurs',
+  jurassic: 'age-of-dinosaurs',
+  triassic: 'age-of-dinosaurs',
+  permian: 'ancient-oceans',
+  devonian: 'ancient-oceans',
+  ordovician: 'ancient-oceans',
+};
+
+export function getStratumIdForSpecies(species: Species): StratumId {
+  return ERA_TO_STRATUM_MAP[species.eraId] ?? 'modern-extinctions';
+}
+
+export function matchesTaxonMacroFilter(species: Species, filter: TaxonMacroFilter): boolean {
+  if (filter === 'all') return true;
+  const tg = species.taxonGroup;
+  const cls = species.taxonomy?.class ?? '';
+
+  switch (filter) {
+    case 'mammals':
+      return (
+        tg === 'mammal-megafauna' ||
+        tg === 'mammal-carnivore' ||
+        tg === 'mammal-ungulate' ||
+        tg === 'cetacean' ||
+        tg === 'synapsid'
+      );
+    case 'birds':
+      return tg === 'bird';
+    case 'reptiles-dinosaurs':
+      return (
+        tg === 'dinosaur-theropod' ||
+        tg === 'dinosaur-herbivore' ||
+        tg === 'pterosaur-marine' ||
+        (tg === 'amphibian-reptile' && /reptilia|sauropsida|reptiliomorpha/i.test(cls))
+      );
+    case 'marine-fish':
+      return tg === 'fish' || tg === 'cetacean' || tg === 'pterosaur-marine';
+    case 'amphibians-invertebrates':
+      return (
+        tg === 'arthropod' ||
+        (tg === 'amphibian-reptile' && !/reptilia|sauropsida|reptiliomorpha/i.test(cls))
+      );
+    default:
+      return true;
+  }
+}
