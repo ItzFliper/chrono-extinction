@@ -1,69 +1,79 @@
 # ChronoExtinction
 
-**ChronoExtinction** is an interactive deep-time logarithmic atlas exploring extinct, endangered, and recovered species across **505 million years of Earth history**—from Cambrian and Ordovician marine predators down to Pleistocene megafauna, historical losses, and present-day conservation outcomes.
-
----
+An interactive **Vertical Geological Strata Museum & Filterable Atlas** exploring extinct, endangered, and conservation-recovered animal species across deep geological time—from the Paleozoic oceans through the Present.
 
 ## Key Features
 
-### 1. Inverted Logarithmic Deep-Time Engine ($\log_{10}$)
-- Transitions fluidly across nine orders of magnitude—from **505 Ma** and **450 Ma** down to **10,000 BCE**, **1500 CE**, **1900 CE**, and **The Present**—using an inverted logarithmic projection relative to the present:
-  $$L = \log_{10}(\text{YearsAgo} + 1)$$
-  $$x(L) = \frac{W}{2} + \left(\frac{L_{\text{center}} - L}{Z_{\text{span}}}\right) \times W$$
-- Supports **cursor-anchored mouse-wheel zooming**, **pointer drag panning**, **touch pinch-to-zoom**, a **logarithmic zoom slider**, and **60fps `requestAnimationFrame` spring interpolation**.
+- **Vertical Geological Strata Museum (`src/components/VerticalStrataAtlas.tsx`)**: Native 120fps vertical scrolling through six curated deep-time strata (`src/data/eras.ts`), accelerated with CSS `content-visibility: auto` (`.stratum-grid-contain`) and annotated with Earth's Big Five mass extinction markers.
+- **Present Conservation Split Showcase**:
+  - **Track A — On the Brink (`endangered`)**: Currently threatened and critically endangered species.
+  - **Track B — Brought Back (`recovered`)**: Documented conservation recovery successes.
+- **Sticky Control & Filter Bar (`src/components/ControlBar.tsx`)**:
+  - Instant search (`/` keyboard shortcut) across common names, scientific names, taxonomy, and extinction/recovery causes using a pre-computed index (`SEARCH_INDEX` in `src/app/page.tsx`).
+  - Status tabs (*All*, *Endangered*, *Saved*, *Extinct*).
+  - Taxonomic macro-group filter pills and chronological sort-order toggle (Newest to Oldest / Oldest to Newest).
+- **Floating Depth / Era Elevator Rail (`src/components/StrataElevatorRail.tsx`)**: Desktop right-edge jump rail (`xl`+) and mobile bottom quick-jump navigation dock with `IntersectionObserver` active-stratum tracking.
+- **Lazy Media & Species Detail Drawer (`src/components/AtlasSpeciesCard.tsx`, `src/components/SpeciesDrawer.tsx`)**: 95% (`1,137 / 1,198`) pre-cached Wikipedia thumbnails paired with an `IntersectionObserver` Wikipedia REST v1 + MediaWiki Action API fallback (`src/lib/wikipedia.ts`), SVG silhouette fallback, and an accessible `<dialog>` detail drawer with taxonomic metadata and a **Jump to Stratum** action.
 
-### 2. Semantic Level of Detail (LoD) & Viewport Virtualization
-- **Macro View ($Z_{\text{span}} > 4.6$):** Geological era background bands, dynamic logarithmic ruler ticks, the **"Big Five" Mass Extinction beacons** (444 Ma, 372 Ma, 252 Ma, 201 Ma, 66 Ma), and flagship evolutionary landmarks.
-- **Meso View ($1.85 < Z_{\text{span}} \le 4.6$):** Smoothly promotes mid-tier species to interactive cards and compact badges with collision-free deterministic vertical lane assignment.
-- **Micro View ($Z_{\text{span}} \le 1.85$):** Full specimen cards displaying Wikipedia thumbnails, scientific binomials, exact extinction dates, and extinction driver summaries.
-- Only species inside the active viewport bounds (plus a small buffer) are mounted in the DOM for sustained 60fps performance.
+## Species Dataset (`src/data/species.json`)
 
-### 3. "The Present" Split-Track Conservation Zone
-At the right-most meridian (`L = 0.00`, `2026 CE`), the timeline opens into an Anthropocene split-track zone with CSS `content-visibility: auto` containment:
-- **Track 1 — Endangered (*En peligro de extinción*):** Vaquita, Amur Leopard, Javan Rhinoceros, Kākāpō, Saola, Sumatran Orangutan, Axolotl, and Mountain Gorilla.
-- **Track 2 — Saved / Recovered (*Salvados de la extinción*):** Iberian Lynx (*Lynx pardinus*), Bald Eagle, Giant Panda, Humpback Whale, California Condor, Arabian Oryx, Przewalski's Horse, and Black-footed Ferret.
+The atlas ships with **1,198** unique, schema-validated, Wikipedia-verified species across ten geological eras/buckets:
 
-### 4. Floating Search, Filters, Era Dock & Native `<dialog>` Detail Drawer
-- **Floating Glassmorphism Control Bar:** Instant search (keyboard shortcut `/`) across common names, binomials, causes, eras, and regions; status filter pills (*All*, *Extinct*, *Endangered*, *Recovered*); and flexible Year/Age Jumper (`66 Ma`, `10000 BCE`, `1936`, `Present`).
-- **Jump-to-Era Quick-Navigation Dock:** One-click camera flights to *All Time*, *Ordovician (444 Ma)*, *Permian (252 Ma)*, *Triassic (201 Ma)*, *Cretaceous (66 Ma)*, *Pleistocene (10,000 BCE)*, *1500 CE*, *1900 CE*, and *The Present*.
-- **Species Detail Slide-Over Drawer:** Built on a native modal `<dialog>` (`showModal()`) with light-dismiss and `Esc` support that preserves the user's timeline zoom and pan state, displaying high-resolution Wikipedia photography, taxonomic classification, timeline coordinates, curated extinction/recovery explanations, and live Wikipedia REST API monographs paired with SVG taxonomic silhouette fallbacks.
+- **Total Species:** `1,198` (`897` extinct, `175` endangered, `126` recovered)
+- **Pre-Cached Wikipedia Thumbnails:** `1,137` (`95%`)
+- **Validation & Deduplication:** `scripts/validate-species.ts` enforces strict schema fields, deduplicates by `id`, `scientificName`, and `wikipediaSlug`, and batches live MediaWiki Action API resolution checks.
 
----
+## Tech Stack
 
-## Tech Stack & Architecture
-
-- **Framework:** Next.js 16 (App Router, Turbopack, TypeScript)
-- **Styling & Motion:** Tailwind CSS v4, Framer Motion, Lucide React
-- **Media & Science Data:**
-  - Curated 69-species dataset in [`src/data/species.json`](src/data/species.json) and ICS geological eras in [`src/data/eras.ts`](src/data/eras.ts)
-  - Concurrency-limited, `localStorage`-cached Wikipedia REST API v1 client in [`src/lib/wikipedia.ts`](src/lib/wikipedia.ts) and [`src/lib/useWikipediaSummary.ts`](src/lib/useWikipediaSummary.ts)
-  - Taxonomic lineage cross-checked via UniProt and EMBL-EBI OLS (`uv` Science Skills)
-
----
+- **Framework:** Next.js `16.4.6` (App Router) & React `19.3.0`
+- **Styling:** Tailwind CSS `4.3.3` (`@tailwindcss/turbopack`)
+- **Icons & UI Utilities:** `lucide-react` & `framer-motion`
+- **Language & Tooling:** TypeScript `^5`, ESLint `^9`, Node `--experimental-strip-types`
 
 ## Local Development
 
 ```bash
+# Install dependencies
 npm install
+
+# Run the development server (http://localhost:3000)
 npm run dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+# Validate species catalog offline (or omit --skip-wiki for live MediaWiki API check)
+node --experimental-strip-types scripts/validate-species.ts --skip-wiki
 
-### Quality Checks
-
-```bash
+# Type-check, lint, and build for production
 npx tsc --noEmit
 npm run lint
 npm run build
 ```
 
----
+## Architecture & Repository Layout
 
-## Git & Pull Request Workflow
+```text
+src/
+├── app/
+│   ├── globals.css                # Tailwind styles & .stratum-grid-contain virtualization
+│   ├── layout.tsx                 # Root metadata & typography
+│   └── page.tsx                   # Atlas orchestration, SEARCH_INDEX, stratum tracking
+├── components/
+│   ├── AtlasSpeciesCard.tsx       # Species card with IntersectionObserver image enrichment
+│   ├── ControlBar.tsx             # Sticky search, status, taxon, and sort controls
+│   ├── SpeciesDrawer.tsx          # Accessible <dialog> species detail view
+│   ├── StrataElevatorRail.tsx     # Floating desktop rail & mobile bottom era dock
+│   └── VerticalStrataAtlas.tsx    # Six-stratum museum layout & Present Track A/B showcase
+├── data/
+│   ├── eras.ts                    # GEOLOGICAL_ERAS, MASS_EXTINCTION_EVENTS, ATLAS_STRATA
+│   └── species.json               # 1,198 curated species entries
+├── lib/
+│   └── wikipedia.ts               # Wikipedia REST + MediaWiki Action API client
+└── types/
+    └── species.ts                 # TypeScript interfaces & filter union types
+scripts/
+└── validate-species.ts            # Dataset integrity & Wikipedia slug validator
+```
 
-Built across four dedicated feature branches merged into protected `main`:
-1. **PR #1 (`feat/project-setup-and-dataset`):** Next.js + Tailwind scaffold, typed schema, 69-species dataset, Wikipedia fetcher, and SVG silhouettes.
-2. **PR #2 (`feat/logarithmic-timeline-engine`):** Inverted $\log_{10}$ math engine, Semantic LoD viewport virtualization, Big Five markers, and Present split-track zone.
-3. **PR #3 (`feat/search-filters-and-drawer`):** Floating search/filter bar, Jump-to-Era dock, and native `<dialog>` species detail drawer.
-4. **PR #4 (`feat/devtools-qa-and-polish`):** Live browser/DevTools QA verification (hydration fix, 66 Ma vertical card separation, network & 60fps zoom telemetry) and documentation.
+## Scientific & External Data Attributions
+
+- Species taxonomy and geological time definitions were cross-referenced against [EMBL-EBI Ontology Lookup Service (OLS)](https://www.ebi.ac.uk/ols4/api-docs) and [UniProt](https://www.uniprot.org/help/license).
+- Species summaries and specimen imagery metadata are retrieved via the [Wikimedia / Wikipedia REST & Action APIs](https://www.mediawiki.org/wiki/API:Main_page).
