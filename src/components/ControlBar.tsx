@@ -306,7 +306,7 @@ export function ControlBar({
         </div>
 
         {/* Quick Year Jump */}
-        <form onSubmit={handleYearJumpSubmit} className="hidden xl:flex items-center gap-1.5">
+        <form onSubmit={handleYearJumpSubmit} className="hidden lg:flex items-center gap-1.5">
           <div className="relative flex items-center">
             <Clock className="w-3 h-3 text-slate-400 absolute left-2.5 pointer-events-none" />
             <input
@@ -316,9 +316,9 @@ export function ControlBar({
                 setYearInput(e.target.value);
                 if (yearError) setYearError(false);
               }}
-              placeholder="Jump year (e.g. 66 Ma, 1900)"
+              placeholder="Jump year (66 Ma, 1900)"
               aria-label="Jump to specific year or geological age"
-              className={`w-44 rounded-xl bg-slate-900/85 border pl-7 pr-2.5 py-1.5 text-[11px] text-slate-100 placeholder:text-slate-500 focus:outline-none transition-colors ${
+              className={`w-36 xl:w-44 rounded-xl bg-slate-900/85 border pl-7 pr-2.5 py-1.5 text-[11px] text-slate-100 placeholder:text-slate-500 focus:outline-none transition-colors ${
                 yearError
                   ? 'border-rose-400/80 ring-2 ring-rose-500/20'
                   : 'border-white/15 focus:border-sky-400/60'

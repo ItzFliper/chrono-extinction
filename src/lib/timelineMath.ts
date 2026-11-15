@@ -204,6 +204,7 @@ export interface PositionedSpeciesNode {
 }
 
 const LANE_COUNT = 6;
+const CARD_LANE_COUNT = 4; // Lanes 0..3 have generous vertical clearance for full specimen cards
 
 /**
  * Computes collision-free vertical lanes & semantic render modes for visible deep-time/historical species.
@@ -224,7 +225,7 @@ export function layoutVisibleTimelineNodes(
     .map((s) => {
       const yearsAgo = getYearsAgo(s.extinctionYear, s.status);
       const logVal = yearsAgoToLog(yearsAgo);
-      const screenX = logToScreenX(logVal, centerLog, zoomSpanLog, viewportWidth);
+      const screenX = Math.round(logToScreenX(logVal, centerLog, zoomSpanLog, viewportWidth));
       return { species: s, yearsAgo, logVal, screenX };
     })
     .filter((item) => item.screenX >= -bufferPx && item.screenX <= viewportWidth + bufferPx)
@@ -238,7 +239,7 @@ export function layoutVisibleTimelineNodes(
 
   // Track last occupied X coordinate on each lane for full cards and compact pills
   const cardMinGap = semanticZoom === 'micro' ? 204 : semanticZoom === 'meso' ? 176 : 162;
-  const compactMinGap = 112;
+  const compactMinGap = 132;
 
   const occupiedCardX: number[][] = Array.from({ length: LANE_COUNT }, () => []);
   const occupiedCompactX: number[][] = Array.from({ length: LANE_COUNT }, () => []);
@@ -254,7 +255,8 @@ export function layoutVisibleTimelineNodes(
     for (let i = 0; i < item.species.id.length; i++) {
       idHash = (idHash * 31 + item.species.id.charCodeAt(i)) | 0;
     }
-    const preferredLane = Math.abs(idHash) % LANE_COUNT;
+    const preferredCardLane = Math.abs(idHash) % CARD_LANE_COUNT;
+    const preferredCompactLane = Math.abs(idHash) % LANE_COUNT;
 
     // In macro zoom, allow priority 1 as cards, priority 2 as compact/pip, priority 3 as pips
     const desiredMode: 'card' | 'compact' | 'pip' =
@@ -274,11 +276,11 @@ export function layoutVisibleTimelineNodes(
     let finalMode: 'card' | 'compact' | 'pip' = desiredMode;
 
     if (desiredMode === 'card') {
-      for (let offset = 0; offset < LANE_COUNT; offset++) {
-        const lane = (preferredLane + offset) % LANE_COUNT;
-        const collision = occupiedCardX[lane].some(
-          (x) => Math.abs(x - item.screenX) < cardMinGap
-        );
+      for (let offset = 0; offset < CARD_LANE_COUNT; offset++) {
+        const lane = (preferredCardLane + offset) % CARD_LANE_COUNT;
+        const collision =
+          occupiedCardX[lane].some((x) => Math.abs(x - item.screenX) < cardMinGap) ||
+          occupiedCompactX[lane].some((x) => Math.abs(x - item.screenX) < cardMinGap * 0.85);
         if (!collision) {
           assignedLane = lane;
           occupiedCardX[lane].push(item.screenX);
@@ -292,10 +294,11 @@ export function layoutVisibleTimelineNodes(
     }
 
     if (finalMode === 'compact') {
-      for (let offset = 0; offset < LANE_COUNT; offset++) {
-        const lane = (preferredLane + offset) % LANE_COUNT;
+      // Prefer outer compact lanes 4..5 first so compact pills sit cleanly outside full cards
+      const laneOrder = [4, 5, ...Array.from({ length: LANE_COUNT }, (_, i) => (preferredCompactLane + i) % LANE_COUNT)];
+      for (const lane of laneOrder) {
         const collision =
-          occupiedCardX[lane].some((x) => Math.abs(x - item.screenX) < cardMinGap * 0.8) ||
+          occupiedCardX[lane].some((x) => Math.abs(x - item.screenX) < cardMinGap * 0.85) ||
           occupiedCompactX[lane].some((x) => Math.abs(x - item.screenX) < compactMinGap);
         if (!collision) {
           assignedLane = lane;
@@ -309,7 +312,7 @@ export function layoutVisibleTimelineNodes(
     }
 
     if (finalMode === 'pip') {
-      assignedLane = preferredLane;
+      assignedLane = preferredCompactLane;
     }
 
     placed.push({
