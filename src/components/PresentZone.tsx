@@ -20,10 +20,11 @@ const PresentSpeciesCard = React.memo(function PresentSpeciesCard({
   isSelected,
   onSelect,
 }: PresentSpeciesCardProps) {
-  const { summary: wiki } = useWikipediaSummary(species.wikipediaSlug, true);
+  const hasPresetThumb = Boolean(species.thumbnailUrl);
+  const { summary: wiki } = useWikipediaSummary(species.wikipediaSlug, !hasPresetThumb);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
-  const rawThumbUrl = wiki?.thumbnailUrl;
+  const rawThumbUrl = species.thumbnailUrl || wiki?.thumbnailUrl;
   const thumbUrl = rawThumbUrl && failedUrl !== rawThumbUrl ? rawThumbUrl : undefined;
   const isEndangered = variant === 'endangered';
 
@@ -31,14 +32,14 @@ const PresentSpeciesCard = React.memo(function PresentSpeciesCard({
     <button
       type="button"
       onClick={() => onSelect(species)}
-      className={`group flex items-center gap-2.5 w-full rounded-xl p-2 text-left border backdrop-blur-md transition-all duration-150 cursor-pointer ${
+      className={`group flex items-center gap-2.5 w-full rounded-xl p-2 text-left border transition-colors duration-150 cursor-pointer ${
         isSelected
           ? isEndangered
-            ? 'bg-rose-950/85 border-rose-400 ring-1 ring-rose-300/60 shadow-[0_0_24px_rgba(244,63,94,0.3)]'
-            : 'bg-emerald-950/85 border-emerald-400 ring-1 ring-emerald-300/60 shadow-[0_0_24px_rgba(16,185,129,0.3)]'
+            ? 'bg-rose-950/95 border-rose-400 ring-1 ring-rose-300/60'
+            : 'bg-emerald-950/95 border-emerald-400 ring-1 ring-emerald-300/60'
           : isEndangered
-            ? 'bg-slate-950/70 border-rose-500/20 hover:border-rose-400/60 hover:bg-rose-950/35'
-            : 'bg-slate-950/70 border-emerald-500/20 hover:border-emerald-400/60 hover:bg-emerald-950/35'
+            ? 'bg-slate-950/90 border-rose-500/20 hover:border-rose-400/60 hover:bg-rose-950/45'
+            : 'bg-slate-950/90 border-emerald-500/20 hover:border-emerald-400/60 hover:bg-emerald-950/45'
       }`}
     >
       <div className="w-11 h-11 rounded-lg overflow-hidden bg-slate-900 shrink-0 border border-white/10 flex items-center justify-center">
@@ -84,6 +85,7 @@ const PresentSpeciesCard = React.memo(function PresentSpeciesCard({
 });
 
 interface PresentZoneProps {
+  sectionRef?: React.Ref<HTMLElement>;
   presentX: number;
   viewportWidth: number;
   endangeredSpecies: Species[];
@@ -95,6 +97,7 @@ interface PresentZoneProps {
 }
 
 export function PresentZone({
+  sectionRef,
   presentX,
   viewportWidth,
   endangeredSpecies,
@@ -130,19 +133,23 @@ export function PresentZone({
 
   const isCompactEdgeMode = availableRightWidth < 330;
 
+  const clampedLeft = Math.max(0, Math.round(presentX));
+
   return (
     <section
+      ref={sectionRef}
       aria-label="The Present Conservation Crossroads"
-      className="pointer-events-none absolute top-0 bottom-0 right-0 z-25"
+      className="pointer-events-none absolute top-0 bottom-0 left-0 z-25 will-change-transform"
       style={{
-        left: `${Math.max(0, presentX)}px`,
+        transform: `translate3d(${clampedLeft}px, 0px, 0px)`,
+        width: `${Math.max(220, Math.round(viewportWidth - clampedLeft))}px`,
       }}
     >
       {/* Present Meridian Line */}
-      <div className="absolute left-0 top-14 bottom-16 w-px bg-gradient-to-b from-rose-400/60 via-white/80 to-emerald-400/70 shadow-[0_0_16px_rgba(52,211,153,0.5)]" />
+      <div className="absolute left-0 top-14 bottom-16 w-px bg-gradient-to-b from-rose-400/60 via-white/80 to-emerald-400/70" />
 
       {isCompactEdgeMode ? (
-        <div className="pointer-events-auto absolute left-3 top-1/2 -translate-y-1/2 w-[180px] rounded-2xl border border-white/15 bg-slate-950/85 backdrop-blur-xl p-3 shadow-2xl">
+        <div className="pointer-events-auto absolute left-3 top-1/2 -translate-y-1/2 w-[180px] rounded-2xl border border-white/15 bg-zinc-900/95 p-3">
           <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-emerald-300 mb-1.5">
             <Sparkles className="w-3 h-3" />
             <span>The Present · 2026</span>
@@ -195,7 +202,7 @@ export function PresentZone({
           >
             {/* Track 1: Endangered */}
             {showEndangered && (
-              <div className="present-track-contain rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-950/45 via-slate-950/80 to-amber-950/25 p-3.5 backdrop-blur-xl shadow-[0_12px_36px_rgba(244,63,94,0.12)]">
+              <div className="present-track-contain rounded-2xl border border-rose-500/30 bg-zinc-950/92 p-3.5">
                 <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-rose-400/15">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-rose-500/20 border border-rose-400/30 text-rose-300">
@@ -227,7 +234,7 @@ export function PresentZone({
 
             {/* Track 2: Saved / Recovered */}
             {showRecovered && (
-              <div className="present-track-contain rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/45 via-slate-950/80 to-teal-950/25 p-3.5 backdrop-blur-xl shadow-[0_12px_36px_rgba(16,185,129,0.12)]">
+              <div className="present-track-contain rounded-2xl border border-emerald-500/30 bg-zinc-950/92 p-3.5">
                 <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-emerald-400/15">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">

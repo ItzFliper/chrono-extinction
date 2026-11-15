@@ -52,6 +52,7 @@ export interface Species {
   taxonomy?: SpeciesTaxonomy;
   region?: string;
   iucnBadge?: string;
+  thumbnailUrl?: string;
   /** Higher priority surfaces earlier in Macro/Meso semantic zoom levels */
   landmarkPriority?: 1 | 2 | 3;
 }
